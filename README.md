@@ -1,4 +1,4 @@
-# Working through the [custom runtimes tutorial](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-walkthrough.html)
+# Working through the AWS Lambda [custom runtimes tutorial](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-walkthrough.html)
 
 ## Goals:
 
