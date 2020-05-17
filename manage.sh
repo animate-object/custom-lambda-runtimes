@@ -5,6 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ROLE_NAME='CustomRuntimeDemoLambdaRole'
 FUNCTION_NAME="custom-runtime-demo"
 FUNCTION_BUNDLE="$DIR/function.zip"
+BASIC_LAMBDA_POLICY_ARN="arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 
 
 deps() {
@@ -23,7 +24,7 @@ find_or_create_lambda_role() {
             --assume-role-policy-document "file://$DIR/lambda-policy.json")
         aws iam attach-role-policy \
             --role-name $ROLE_NAME \
-            --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+            --policy-arn "$BASIC_LAMBDA_POLICY_ARN"
         role_arn=$(echo $role)
     else
         role_arn=$(echo $found_role | jq -r .Arn)
@@ -71,17 +72,26 @@ delete_fn() {
     aws lambda delete-function --function $FUNCTION_NAME
 }
 delete_role() {
-    echo 'unimplemented'
+    aws iam detach-role-policy --role-name $ROLE_NAME \
+        --policy-arn $BASIC_LAMBDA_POLICY_ARN
+    aws iam delete-role --role-name $ROLE_NAME
 }
 
 update_fn() {
     echo 'unimplimented'
 }
 
+DEFAULT_PAYLOAD='{"text":"hello world"}'
+invoke_fn() {
+    ARGS=${1:-"$DEFAULT_PAYLOAD"}
+
+    aws lambda invoke --function-name $FUNCTION_NAME --payload "$ARGS" $DIR/response.txt 
+}
+
 
 main() {
-    local command=$1
-
+    local command="$1"
+    local invoke_args="$2" 
     case "$command" in
         create)
             new_fn
@@ -93,12 +103,15 @@ main() {
             delete_fn
             delete_role
             ;;
+        invoke)
+            invoke_fn $invoke_args
+            ;;
         *)
             echo "Invalide option: $command"
-            echo "Usage: $0 [create|update|delete]"
+            echo "Usage: $0 [create|update|invoke|delete]"
             exit 1
     esac
 }
 
 deps
-main $1
+main $@

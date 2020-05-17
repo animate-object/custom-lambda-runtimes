@@ -29,3 +29,12 @@ The docs note that this simple example doesn't handle _all_ runtime responsibili
 
 ~
 Now it looks like we're going to package this up and deploy it. I'm going to modify my bootstrap.sh script to create the function if it doesn't exist. I think I'd also like it to _update_ the function if it does exist, so I can play with the code.
+
+~
+Okay, I worked through a couple issues on start up -- one, it looks like if you're not using layers, lambda looks for an executable called boostrap in /var/task or /opt that it invokes on startup. So I renamed `src/runtime` to `src/boostrap`. This is what the guide suggested initially, but now the significance of the naming is clear.
+
+To alleviate confusion, I renamed my infrastructure management script from `bootstrap.sh` to `manage.sh`. I also updated it to accept commands to create, update, and delete the function, so you can test this code and remove it easily.
+
+Everything seems to be working, we have a custom bash runtime that calls a simple 'echoing' handler.
+
+The next step in the tutorial is to upgrade this to use layers.
