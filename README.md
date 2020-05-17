@@ -8,8 +8,16 @@
 
 It looks like this tutorial is a guide for making a bash runtime -- that's pretty interesting. Seems like there are some interesting use cases for executing bash scripts on demand/remotely (nightly data processing, anyone?)
 
+~
 One of the first things this guide directs you to do is to create a lambda execution role through the console. Let's see if we can figure out how to do it in the cli
 
+~
 I've started writing a script called bootstrap.sh -- this will be an idempotent way to create the infrastructure required for this project. Executing it requires some admin privileges in your ecosystem. I'm going with a scripting solution here because cloudformation feels a little heavy for this project at the moment.
 
+~
 Bootstrap.sh now looks for a role called `CustomRuntimeDemoLambdaRole` and creates it with the right permissions if it does not exist.
+
+~
+Okay, so I'm starting to dive into the sort of 'pseudo runtime' that they have you build in the first pass and I came across the amazon lambda runtime interface.
+
+It is pretty cool, from what I can tell, amazon-lambda-runtime-interface is a process that runs locally in the lambda execution environment and allows you to create an event loop. Your lambda basically polls it for incoming events, and then pushes responses back. All over http via what's basically a restful API. Neat.
