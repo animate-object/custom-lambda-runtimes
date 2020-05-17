@@ -19,6 +19,7 @@ set -euo pipefail
 
 # looks like we're just sourcing our handler function
 # $LAMBDA_TASK_ROOT must be like, the working dir of our lambda env
+ls $LAMBDA_TASK_ROOT
 source $LAMBDA_TASK_ROOT/"$(echo $_HANDLER | cut -d. -f1).sh"
 
 # seems to be the main event loop
@@ -31,9 +32,29 @@ do
     # okay, this is pretty interesting... it looks like we're making a blocking request
     # to some server, maybe a local server, that's hosting the lambda runtime api
     # and basically longpolling for the next event
+
+    # brushing up on curl flags, -sS is silent but show errors (the -S)
+    # -L == location, perform an automatic redirect in the case of a 300
+    #   level response with a new location header
+    # -D dump headers, we're dumping headers into the tmp file above
+    # -X GET is obviously 'use a GET request'
     EVENT_DATA=$(curl -sS \
         -LD "$HEADERS" \
         -X GET "http://${AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/next")
-    # TODO . . . 
+    
+    # this is extracting some data from the headers
+    # few new to me flags
+    # grep -F says to treat the pattern as a string instead of regex?
+    # tr -d says remove the matched pattern (paces in this case)
+    # baicaly we're trimming out the value of the specified header
+    REQUEST_ID=$(grep -Fi Lambda-Runtime-Aws-Request-Id "$HEADERS" \
+        | tr -d '[:space:]' \
+        | cut -d: -f2)
 
+    # Okay finally we are taking our handler function, which we pulled into scope above
+    # and executing it with the 'EVENT_DATA'
+    RESPONSE=$($(echo "$_HANDLER" | cut -d. -f2) "$EVENT_DATA")
+
+    # And finally we're posting back to the lambda runtime API
+    curl -X POST "http://${AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/$REQUEST_ID/response" -d "$RESPONSE"
 done

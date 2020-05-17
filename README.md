@@ -21,3 +21,11 @@ Bootstrap.sh now looks for a role called `CustomRuntimeDemoLambdaRole` and creat
 Okay, so I'm starting to dive into the sort of 'pseudo runtime' that they have you build in the first pass and I came across the amazon lambda runtime interface.
 
 It is pretty cool, from what I can tell, amazon-lambda-runtime-interface is a process that runs locally in the lambda execution environment and allows you to create an event loop. Your lambda basically polls it for incoming events, and then pushes responses back. All over http via what's basically a restful API. Neat.
+
+~
+Picking up where we left off, I've copied the rest of the code and annotated it. We have a simple little runtime that initializes our environment and feeds incoming requests to our handler in a simple event loop. It then it posts the handlers response back to the lambda runtime.
+
+The docs note that this simple example doesn't handle _all_ runtime responsibilities, in particular it doesn't make use of the AWS lambda runtime interface's error handling capabilities.
+
+~
+Now it looks like we're going to package this up and deploy it. I'm going to modify my bootstrap.sh script to create the function if it doesn't exist. I think I'd also like it to _update_ the function if it does exist, so I can play with the code.

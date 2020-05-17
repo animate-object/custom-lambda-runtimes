@@ -4,7 +4,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # config, feel free to edit these
 ROLE_NAME='CustomRuntimeDemoLambdaRole'
 FUNCTION_NAME="custom-runtime-demo"
-FUNCTION_BUNDLE="function.zip"
+FUNCTION_BUNDLE="$DIR/function.zip"
 
 
 deps() {
@@ -33,8 +33,11 @@ find_or_create_lambda_role() {
 }
 
 package() {
-    chmod 755 $DIR/src/function.sh $DIR/src/runtime
-    zip $FUNCTION_BUNDLE $DIR/src/function.sh $DIR/src/runtime
+    rm $FUNCTION_BUNDLE
+    pushd $DIR/src
+    zip $FUNCTION_BUNDLE *
+    chmod 755 *
+    popd
 }
 
 
@@ -43,24 +46,24 @@ create_fn() {
     echo $role_arn
     # I bet --handler sets the value of $_HANDLER
     aws lambda create-function --function-name $FUNCTION_NAME \
-        --zip-file "fileb://$FUNCTION_BUNDLE" --handler "funciton.handler" \
+        --zip-file "fileb://$FUNCTION_BUNDLE" --handler "function.handler" \
         --runtime provided --role $role_arn
 }
 
 fn_exists() {
-    echo $(aws lambda get-function --function-name $FUNCTION_NAME)
+    return $(aws lambda get-function --function-name $FUNCTION_NAME &> /dev/null && 1) || 0
 }
-
-deps
 
 new_fn() {
     ROLE_ARN=$(find_or_create_lambda_role)
-    if [ ! fn_exists ]
+
+    if ! fn_exists
     then
         package
         create_fn $ROLE_ARN
+        rm $FUNCTION_BUNDLE
     else
-        echo 'function $FUNCTION_NAME already exists'
+        echo "function $FUNCTION_NAME already exists"
     fi    
 }
 
