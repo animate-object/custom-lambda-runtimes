@@ -2,7 +2,7 @@
 
 ## Goals:
 
-- Learn enough about custom runtimes to package a Deno runtime
+- Learn enough about custom runtimes to package a Deno runtime -- I found [this one](https://github.com/hayd/deno-lambda), but I figured I'd like to understand what's going on a bit better.
 - Minimal pointy-click config, prefer scriptable/infra as code solutions
 - Document the process for future generations
 
